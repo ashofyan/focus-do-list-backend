@@ -26,7 +26,7 @@ return [
     ],
 
     'auth' => [
-        'url' => env('AUTH_SERVICE_URL', 'http://localhost:8000'),
+        'url' => env('AUTH_SERVICE_URL', 'https://auth.fynworks.my.id'),
     ],
 
 ];

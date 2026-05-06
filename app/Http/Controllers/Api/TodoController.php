@@ -3,47 +3,48 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Milestone;
 use App\Models\Todo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TodoController extends Controller
 {
     // -------------------------------------------------------------------------
     // GET /api/todos
-    // Query params: status, priority, group_id, date, search, pinned, page
+    // Query params: status, priority, group_id, milestone_id, date, search, page
     // -------------------------------------------------------------------------
     public function index(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = Todo::with(['group', 'labels', 'subTasks'])
+        $query = Todo::with(['group', 'milestone', 'labels', 'subTasks'])
             ->where('user_id', $user->id)
             ->orderBy('is_pinned', 'desc')
             ->orderBy('sort_order')
             ->orderBy('due_date');
 
-        // Filter: status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter: priority
         if ($request->filled('priority')) {
             $query->where('priority', $request->priority);
         }
 
-        // Filter: group
         if ($request->filled('group_id')) {
             $query->where('group_id', $request->group_id);
         }
 
-        // Filter: tanggal spesifik
+        if ($request->filled('milestone_id')) {
+            $query->where('milestone_id', $request->milestone_id);
+        }
+
         if ($request->filled('date')) {
             $query->whereDate('due_date', $request->date);
         }
 
-        // Filter: search judul
         if ($request->filled('search')) {
             $query->where('title', 'ilike', '%' . $request->search . '%');
         }
@@ -66,7 +67,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     public function today(Request $request): JsonResponse
     {
-        $todos = Todo::with(['group', 'labels', 'subTasks'])
+        $todos = Todo::with(['group', 'milestone', 'labels', 'subTasks'])
             ->where('user_id', $request->user()->id)
             ->whereDate('due_date', today())
             ->orderBy('is_pinned', 'desc')
@@ -81,7 +82,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     public function pinned(Request $request): JsonResponse
     {
-        $todos = Todo::with(['group', 'labels', 'subTasks'])
+        $todos = Todo::with(['group', 'milestone', 'labels', 'subTasks'])
             ->where('user_id', $request->user()->id)
             ->where('is_pinned', true)
             ->where('status', '!=', 'completed')
@@ -102,6 +103,11 @@ class TodoController extends Controller
             'due_date'       => 'nullable|date',
             'priority'       => 'nullable|in:low,medium,high',
             'group_id'       => 'nullable|exists:groups,id',
+            'milestone_id'   => [
+                'nullable',
+                'integer',
+                Rule::exists('milestones', 'id')->where('user_id', $request->user()->id),
+            ],
             'is_pinned'      => 'nullable|boolean',
             'label_ids'      => 'nullable|array',
             'label_ids.*'    => 'exists:labels,id',
@@ -109,21 +115,23 @@ class TodoController extends Controller
 
         $todo = DB::transaction(function () use ($data, $request) {
             $todo = Todo::create([
-                'user_id'     => $request->user()->id,
-                'group_id'    => $data['group_id'] ?? null,
-                'title'       => $data['title'],
-                'description' => $data['description'] ?? null,
-                'due_date'    => $data['due_date'] ?? null,
-                'priority'    => $data['priority'] ?? 'medium',
-                'is_pinned'   => $data['is_pinned'] ?? false,
+                'user_id'      => $request->user()->id,
+                'group_id'     => $data['group_id'] ?? null,
+                'milestone_id' => $data['milestone_id'] ?? null,
+                'title'        => $data['title'],
+                'description'  => $data['description'] ?? null,
+                'due_date'     => $data['due_date'] ?? null,
+                'priority'     => $data['priority'] ?? 'medium',
+                'is_pinned'    => $data['is_pinned'] ?? false,
             ]);
 
-            // Sync labels
             if (! empty($data['label_ids'])) {
                 $todo->labels()->sync($data['label_ids']);
             }
 
-            return $todo->load(['group', 'labels', 'subTasks']);
+            $this->refreshMilestoneProgress($todo->milestone_id);
+
+            return $todo->load(['group', 'milestone', 'labels', 'subTasks']);
         });
 
         return response()->json([
@@ -137,7 +145,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     public function show(Request $request, string $id): JsonResponse
     {
-        $todo = Todo::with(['group', 'labels', 'subTasks'])
+        $todo = Todo::with(['group', 'milestone', 'labels', 'subTasks'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -152,30 +160,44 @@ class TodoController extends Controller
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
 
         $data = $request->validate([
-            'title'       => 'sometimes|string|max:255',
-            'description' => 'sometimes|nullable|string',
-            'due_date'    => 'sometimes|nullable|date',
-            'priority'    => 'sometimes|in:low,medium,high',
-            'status'      => 'sometimes|in:pending,in_progress,completed',
-            'group_id'    => 'sometimes|nullable|exists:groups,id',
-            'is_pinned'   => 'sometimes|boolean',
-            'sort_order'  => 'sometimes|integer|min:0',
-            'label_ids'   => 'sometimes|array',
-            'label_ids.*' => 'exists:labels,id',
+            'title'        => 'sometimes|string|max:255',
+            'description'  => 'sometimes|nullable|string',
+            'due_date'     => 'sometimes|nullable|date',
+            'priority'     => 'sometimes|in:low,medium,high',
+            'status'       => 'sometimes|in:pending,in_progress,completed',
+            'group_id'     => 'sometimes|nullable|exists:groups,id',
+            'milestone_id' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('milestones', 'id')->where('user_id', $request->user()->id),
+            ],
+            'is_pinned'    => 'sometimes|boolean',
+            'sort_order'   => 'sometimes|integer|min:0',
+            'label_ids'    => 'sometimes|array',
+            'label_ids.*'  => 'exists:labels,id',
         ]);
 
         DB::transaction(function () use ($todo, $data) {
+            $oldMilestoneId = $todo->milestone_id;
+            $hasLabelIds = array_key_exists('label_ids', $data);
+            $labelIds = $data['label_ids'] ?? [];
+            unset($data['label_ids']);
+
             $todo->update($data);
 
-            if (array_key_exists('label_ids', $data)) {
-                $todo->labels()->sync($data['label_ids']);
+            if ($hasLabelIds) {
+                $todo->labels()->sync($labelIds);
             }
 
+            $todo->refresh();
+            $this->refreshMilestoneProgress($oldMilestoneId);
+            $this->refreshMilestoneProgress($todo->milestone_id);
         });
 
         return response()->json([
             'message' => 'Todo diperbarui.',
-            'data'    => $todo->fresh(['group', 'labels', 'subTasks']),
+            'data'    => $todo->fresh(['group', 'milestone', 'labels', 'subTasks']),
         ]);
     }
 
@@ -185,7 +207,9 @@ class TodoController extends Controller
     public function destroy(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
+        $milestoneId = $todo->milestone_id;
         $todo->delete();
+        $this->refreshMilestoneProgress($milestoneId);
 
         return response()->json(['message' => 'Todo dihapus.']);
     }
@@ -198,17 +222,18 @@ class TodoController extends Controller
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
 
         if ($todo->status === 'completed') {
-            // Toggle: batalkan complete
             $todo->update(['status' => 'pending', 'completed_at' => null]);
             $message = 'Todo ditandai belum selesai.';
         } else {
             $todo->markComplete();
-            $message = 'Todo ditandai selesai. ✅';
+            $message = 'Todo ditandai selesai.';
         }
+
+        $this->refreshMilestoneProgress($todo->milestone_id);
 
         return response()->json([
             'message' => $message,
-            'data'    => $todo->fresh(),
+            'data'    => $todo->fresh(['group', 'milestone', 'labels', 'subTasks']),
         ]);
     }
 
@@ -224,5 +249,14 @@ class TodoController extends Controller
             'message'   => $todo->is_pinned ? 'Todo dipin.' : 'Todo diunpin.',
             'is_pinned' => $todo->is_pinned,
         ]);
+    }
+
+    private function refreshMilestoneProgress(?int $milestoneId): void
+    {
+        if ($milestoneId === null) {
+            return;
+        }
+
+        Milestone::find($milestoneId)?->refreshProgressFromTasks();
     }
 }

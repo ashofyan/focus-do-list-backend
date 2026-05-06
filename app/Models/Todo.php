@@ -15,6 +15,7 @@ class Todo extends Model
     protected $fillable = [
         'user_id',
         'group_id',
+        'milestone_id',
         'title',
         'description',
         'due_date',
@@ -43,6 +44,11 @@ class Todo extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    public function milestone(): BelongsTo
+    {
+        return $this->belongsTo(Milestone::class);
     }
 
     public function subTasks(): HasMany
