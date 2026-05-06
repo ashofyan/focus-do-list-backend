@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\EncryptedNote;
+use App\Policies\EncryptedNotePolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(EncryptedNote::class, EncryptedNotePolicy::class);
+
+        RateLimiter::for('encrypted-notes', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return Limit::perMinute(120)->by('encrypted-notes:' . $userId);
+        });
     }
 }

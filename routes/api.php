@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EncryptedNoteController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\LabelController;
 use App\Http\Controllers\Api\MilestoneController;
@@ -8,7 +9,7 @@ use App\Http\Controllers\Api\SubTaskController;
 use App\Http\Controllers\Api\TodoController;
 use Illuminate\Support\Facades\Route;
 
-Route::pattern('id', '[0-9]+');
+Route::pattern('id', '[0-9A-Fa-f-]+');
 Route::pattern('sid', '[0-9]+');
 
 /*
@@ -88,5 +89,19 @@ Route::middleware('auth.service')->group(function () {
     // ----------------------------------------------------------
     Route::apiResource('milestones', MilestoneController::class)->parameters(['milestones' => 'id']);
     Route::patch('milestones/{id}/progress', [MilestoneController::class, 'updateProgress']);
+
+    // ----------------------------------------------------------
+    // Encrypted Notes
+    // ----------------------------------------------------------
+    Route::prefix('notes')->middleware('throttle:encrypted-notes')->group(function () {
+        Route::get('/', [EncryptedNoteController::class, 'index']);
+        Route::post('/', [EncryptedNoteController::class, 'store']);
+        Route::get('{id}', [EncryptedNoteController::class, 'show']);
+        Route::put('{id}', [EncryptedNoteController::class, 'update']);
+        Route::delete('{id}', [EncryptedNoteController::class, 'destroy']);
+        Route::post('{id}/restore', [EncryptedNoteController::class, 'restore']);
+        Route::post('{id}/archive', [EncryptedNoteController::class, 'archive']);
+        Route::post('{id}/pin', [EncryptedNoteController::class, 'pin']);
+    });
 
 });

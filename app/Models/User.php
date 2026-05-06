@@ -56,4 +56,9 @@ class User extends Authenticatable
         return $this->hasMany(Milestone::class);
     }
 
+    public function encryptedNotes(): HasMany
+    {
+        return $this->hasMany(EncryptedNote::class);
+    }
+
 }
