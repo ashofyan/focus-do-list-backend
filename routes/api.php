@@ -8,12 +8,15 @@ use App\Http\Controllers\Api\SubTaskController;
 use App\Http\Controllers\Api\TodoController;
 use Illuminate\Support\Facades\Route;
 
+Route::pattern('id', '[0-9]+');
+Route::pattern('sid', '[0-9]+');
+
 /*
 |--------------------------------------------------------------------------
 | API Routes — Todo Management System
 |--------------------------------------------------------------------------
 | Semua route API menggunakan prefix /api (di bootstrap/app.php)
-| Auth menggunakan Laravel Sanctum (token-based)
+| Auth menggunakan AuthService eksternal (Bearer token)
 |--------------------------------------------------------------------------
 */
 
@@ -26,9 +29,9 @@ Route::prefix('auth')->group(function () {
 });
 
 // ============================================================
-// PROTECTED ROUTES (wajib login — Sanctum token)
+// PROTECTED ROUTES (wajib login via AuthService)
 // ============================================================
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.service')->group(function () {
 
     // ----------------------------------------------------------
     // Auth
@@ -37,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me',     [AuthController::class, 'me']);
         Route::put('me',     [AuthController::class, 'updateProfile']);
+        Route::put('password',     [AuthController::class, 'updatePassword']);
     });
 
     // ----------------------------------------------------------
@@ -72,17 +76,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // ----------------------------------------------------------
     // Groups
     // ----------------------------------------------------------
-    Route::apiResource('groups', GroupController::class);
+    Route::apiResource('groups', GroupController::class)->parameters(['groups' => 'id']);
 
     // ----------------------------------------------------------
     // Labels
     // ----------------------------------------------------------
-    Route::apiResource('labels', LabelController::class)->except(['show']);
+    Route::apiResource('labels', LabelController::class)->except(['show'])->parameters(['labels' => 'id']);
 
     // ----------------------------------------------------------
     // Milestones
     // ----------------------------------------------------------
-    Route::apiResource('milestones', MilestoneController::class);
+    Route::apiResource('milestones', MilestoneController::class)->parameters(['milestones' => 'id']);
     Route::patch('milestones/{id}/progress', [MilestoneController::class, 'updateProgress']);
 
 });

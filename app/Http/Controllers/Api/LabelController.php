@@ -43,7 +43,7 @@ class LabelController extends Controller
         return response()->json(['message' => 'Label dibuat.', 'data' => $label], 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, string $id): JsonResponse
     {
         $label = Label::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -57,7 +57,7 @@ class LabelController extends Controller
         return response()->json(['message' => 'Label diperbarui.', 'data' => $label]);
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         $label = Label::where('user_id', $request->user()->id)->findOrFail($id);
         $label->delete();

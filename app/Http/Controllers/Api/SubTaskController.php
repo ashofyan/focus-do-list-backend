@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class SubTaskController extends Controller
 {
     // POST /api/todos/{id}/sub-tasks
-    public function store(Request $request, int $id): JsonResponse
+    public function store(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -32,7 +32,7 @@ class SubTaskController extends Controller
     }
 
     // PATCH /api/todos/{id}/sub-tasks/{sid} - toggle complete
-    public function toggle(Request $request, int $id, int $sid): JsonResponse
+    public function toggle(Request $request, string $id, string $sid): JsonResponse
     {
         $todo    = Todo::where('user_id', $request->user()->id)->findOrFail($id);
         $subTask = SubTask::where('todo_id', $todo->id)->findOrFail($sid);
@@ -50,7 +50,7 @@ class SubTaskController extends Controller
     }
 
     // PUT /api/todos/{id}/sub-tasks/{sid} - rename
-    public function update(Request $request, int $id, int $sid): JsonResponse
+    public function update(Request $request, string $id, string $sid): JsonResponse
     {
         $todo    = Todo::where('user_id', $request->user()->id)->findOrFail($id);
         $subTask = SubTask::where('todo_id', $todo->id)->findOrFail($sid);
@@ -66,7 +66,7 @@ class SubTaskController extends Controller
     }
 
     // DELETE /api/todos/{id}/sub-tasks/{sid}
-    public function destroy(Request $request, int $id, int $sid): JsonResponse
+    public function destroy(Request $request, string $id, string $sid): JsonResponse
     {
         $todo    = Todo::where('user_id', $request->user()->id)->findOrFail($id);
         $subTask = SubTask::where('todo_id', $todo->id)->findOrFail($sid);

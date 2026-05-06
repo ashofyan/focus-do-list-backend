@@ -135,7 +135,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     // GET /api/todos/{id}
     // -------------------------------------------------------------------------
-    public function show(Request $request, int $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $todo = Todo::with(['group', 'labels', 'subTasks'])
             ->where('user_id', $request->user()->id)
@@ -147,7 +147,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     // PUT /api/todos/{id}
     // -------------------------------------------------------------------------
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -182,7 +182,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     // DELETE /api/todos/{id}
     // -------------------------------------------------------------------------
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
         $todo->delete();
@@ -193,7 +193,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     // PATCH /api/todos/{id}/complete
     // -------------------------------------------------------------------------
-    public function complete(Request $request, int $id): JsonResponse
+    public function complete(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -215,7 +215,7 @@ class TodoController extends Controller
     // -------------------------------------------------------------------------
     // PATCH /api/todos/{id}/pin
     // -------------------------------------------------------------------------
-    public function togglePin(Request $request, int $id): JsonResponse
+    public function togglePin(Request $request, string $id): JsonResponse
     {
         $todo = Todo::where('user_id', $request->user()->id)->findOrFail($id);
         $todo->update(['is_pinned' => ! $todo->is_pinned]);

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->string('name', 50);
             $table->string('color', 7)->default('#1D9E75'); // hex color
             $table->timestamps();

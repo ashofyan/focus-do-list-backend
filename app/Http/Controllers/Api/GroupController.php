@@ -37,7 +37,7 @@ class GroupController extends Controller
         return response()->json(['message' => 'Group dibuat.', 'data' => $group], 201);
     }
 
-    public function show(Request $request, int $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $group = Group::where('user_id', $request->user()->id)
             ->withCount('todos')
@@ -46,7 +46,7 @@ class GroupController extends Controller
         return response()->json(['data' => $group]);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, string $id): JsonResponse
     {
         $group = Group::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -61,7 +61,7 @@ class GroupController extends Controller
         return response()->json(['message' => 'Group diperbarui.', 'data' => $group]);
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         $group = Group::where('user_id', $request->user()->id)->findOrFail($id);
         // Todos dalam group → group_id menjadi null (nullOnDelete di migration)

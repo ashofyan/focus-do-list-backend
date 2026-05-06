@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->string('name', 100);
             $table->string('color', 7)->default('#6C63FF'); // hex color
             $table->unsignedInteger('sort_order')->default(0);

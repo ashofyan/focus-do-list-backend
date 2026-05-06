@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('milestones', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->string('title', 255);
             $table->string('category', 50)->nullable(); // Personal, Work, University, etc.
             $table->date('due_date');

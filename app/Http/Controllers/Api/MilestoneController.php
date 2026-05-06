@@ -37,14 +37,14 @@ class MilestoneController extends Controller
         return response()->json(['message' => 'Milestone dibuat.', 'data' => $milestone], 201);
     }
 
-    public function show(Request $request, int $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $milestone = Milestone::where('user_id', $request->user()->id)->findOrFail($id);
 
         return response()->json(['data' => $milestone]);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, string $id): JsonResponse
     {
         $milestone = Milestone::where('user_id', $request->user()->id)->findOrFail($id);
 
@@ -62,7 +62,7 @@ class MilestoneController extends Controller
         return response()->json(['message' => 'Milestone diperbarui.', 'data' => $milestone]);
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         $milestone = Milestone::where('user_id', $request->user()->id)->findOrFail($id);
         $milestone->delete();
@@ -71,7 +71,7 @@ class MilestoneController extends Controller
     }
 
     // PATCH /api/milestones/{id}/progress
-    public function updateProgress(Request $request, int $id): JsonResponse
+    public function updateProgress(Request $request, string $id): JsonResponse
     {
         $milestone = Milestone::where('user_id', $request->user()->id)->findOrFail($id);
 
