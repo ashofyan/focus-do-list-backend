@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DailyProgressController;
 use App\Http\Controllers\Api\EncryptedNoteController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\LabelController;
@@ -26,7 +27,7 @@ Route::pattern('sid', '[0-9]+');
 // ============================================================
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
-    Route::post('login',    [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login']);
 });
 
 // ============================================================
@@ -39,9 +40,9 @@ Route::middleware('auth.service')->group(function () {
     // ----------------------------------------------------------
     Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('me',     [AuthController::class, 'me']);
-        Route::put('me',     [AuthController::class, 'updateProfile']);
-        Route::put('password',     [AuthController::class, 'updatePassword']);
+        Route::get('me', [AuthController::class, 'me']);
+        Route::put('me', [AuthController::class, 'updateProfile']);
+        Route::put('password', [AuthController::class, 'updatePassword']);
     });
 
     // ----------------------------------------------------------
@@ -50,26 +51,26 @@ Route::middleware('auth.service')->group(function () {
     Route::prefix('todos')->group(function () {
 
         // List & create
-        Route::get('/',     [TodoController::class, 'index']);   // GET  /api/todos?status=pending&date=today&group_id=1
-        Route::post('/',    [TodoController::class, 'store']);   // POST /api/todos
+        Route::get('/', [TodoController::class, 'index']);   // GET  /api/todos?status=pending&date=today&group_id=1
+        Route::post('/', [TodoController::class, 'store']);   // POST /api/todos
 
         // Khusus: today & pinned (sebelum {id} agar tidak konflik)
-        Route::get('today',  [TodoController::class, 'today']);  // GET  /api/todos/today
+        Route::get('today', [TodoController::class, 'today']);  // GET  /api/todos/today
         Route::get('pinned', [TodoController::class, 'pinned']); // GET  /api/todos/pinned
 
         // CRUD by ID
-        Route::get('{id}',    [TodoController::class, 'show']);    // GET    /api/todos/{id}
-        Route::put('{id}',    [TodoController::class, 'update']);  // PUT    /api/todos/{id}
+        Route::get('{id}', [TodoController::class, 'show']);    // GET    /api/todos/{id}
+        Route::put('{id}', [TodoController::class, 'update']);  // PUT    /api/todos/{id}
         Route::delete('{id}', [TodoController::class, 'destroy']); // DELETE /api/todos/{id}
 
         // Actions
         Route::patch('{id}/complete', [TodoController::class, 'complete']); // PATCH /api/todos/{id}/complete
-        Route::patch('{id}/pin',      [TodoController::class, 'togglePin']); // PATCH /api/todos/{id}/pin
+        Route::patch('{id}/pin', [TodoController::class, 'togglePin']); // PATCH /api/todos/{id}/pin
 
         // Sub-tasks
-        Route::post('{id}/sub-tasks',         [SubTaskController::class, 'store']);   // POST
-        Route::patch('{id}/sub-tasks/{sid}',  [SubTaskController::class, 'toggle']);  // PATCH toggle complete
-        Route::put('{id}/sub-tasks/{sid}',    [SubTaskController::class, 'update']);  // PUT rename
+        Route::post('{id}/sub-tasks', [SubTaskController::class, 'store']);   // POST
+        Route::patch('{id}/sub-tasks/{sid}', [SubTaskController::class, 'toggle']);  // PATCH toggle complete
+        Route::put('{id}/sub-tasks/{sid}', [SubTaskController::class, 'update']);  // PUT rename
         Route::delete('{id}/sub-tasks/{sid}', [SubTaskController::class, 'destroy']); // DELETE
 
     });
@@ -89,6 +90,18 @@ Route::middleware('auth.service')->group(function () {
     // ----------------------------------------------------------
     Route::apiResource('milestones', MilestoneController::class)->parameters(['milestones' => 'id']);
     Route::patch('milestones/{id}/progress', [MilestoneController::class, 'updateProgress']);
+
+    // ----------------------------------------------------------
+    // Daily Progress
+    // ----------------------------------------------------------
+    Route::prefix('daily-progress')->group(function () {
+        Route::get('/', [DailyProgressController::class, 'index']);
+        Route::post('/', [DailyProgressController::class, 'store']);
+        Route::get('today', [DailyProgressController::class, 'today']);
+        Route::get('{id}', [DailyProgressController::class, 'show']);
+        Route::put('{id}', [DailyProgressController::class, 'update']);
+        Route::delete('{id}', [DailyProgressController::class, 'destroy']);
+    });
 
     // ----------------------------------------------------------
     // Encrypted Notes

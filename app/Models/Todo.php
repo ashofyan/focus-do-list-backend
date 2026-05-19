@@ -27,9 +27,9 @@ class Todo extends Model
     ];
 
     protected $casts = [
-        'due_date'     => 'datetime',
+        'due_date' => 'datetime',
         'completed_at' => 'datetime',
-        'is_pinned'    => 'boolean',
+        'is_pinned' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -61,6 +61,11 @@ class Todo extends Model
         return $this->belongsToMany(Label::class, 'todo_label');
     }
 
+    public function dailyProgresses(): HasMany
+    {
+        return $this->hasMany(DailyProgress::class);
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------
@@ -90,7 +95,7 @@ class Todo extends Model
     public function markComplete(): void
     {
         $this->update([
-            'status'       => 'completed',
+            'status' => 'completed',
             'completed_at' => now(),
         ]);
     }
@@ -101,9 +106,12 @@ class Todo extends Model
     public function subTaskProgress(): int
     {
         $total = $this->subTasks()->count();
-        if ($total === 0) return 0;
+        if ($total === 0) {
+            return 0;
+        }
 
         $done = $this->subTasks()->where('is_completed', true)->count();
+
         return (int) round(($done / $total) * 100);
     }
 }

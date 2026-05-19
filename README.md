@@ -1,6 +1,6 @@
 # Todo Management System - Backend Laravel
 
-Backend API untuk todo management, milestone progress, dan encrypted notes. Project ini memakai Laravel sebagai API service, PostgreSQL sebagai database utama, dan Auth Service eksternal untuk autentikasi user.
+Backend API untuk todo management, milestone progress, daily progress, dan encrypted notes. Project ini memakai Laravel sebagai API service, PostgreSQL sebagai database utama, dan Auth Service eksternal untuk autentikasi user.
 
 ## Stack
 
@@ -177,6 +177,42 @@ PATCH  /api/milestones/{id}/progress
 
 Catatan: jika milestone memiliki task, progress manual akan digantikan oleh hasil kalkulasi task.
 
+### Daily Progress
+
+Daily progress mencatat pekerjaan yang sudah dilakukan pada hari tertentu. Item bisa berdiri sendiri atau dikaitkan ke todo melalui `todo_id`.
+
+Endpoint:
+
+```http
+GET    /api/daily-progress
+POST   /api/daily-progress
+GET    /api/daily-progress/today
+GET    /api/daily-progress/{id}
+PUT    /api/daily-progress/{id}
+DELETE /api/daily-progress/{id}
+```
+
+Payload create:
+
+```json
+{
+  "title": "Review PR billing flow",
+  "description": "Sudah cek validasi invoice dan error handling",
+  "progress_date": "2026-05-19",
+  "todo_id": 12
+}
+```
+
+`progress_date` dan `todo_id` opsional. Jika `progress_date` tidak dikirim, backend memakai tanggal hari ini. `todo_id` hanya bisa mengarah ke todo milik user yang sedang login.
+
+Filter list:
+
+```http
+GET /api/daily-progress?date=2026-05-19
+GET /api/daily-progress?todo_id=12
+GET /api/daily-progress?search=billing
+```
+
 ### Encrypted Notes
 
 Encrypted notes memakai konsep end-to-end encryption / zero-knowledge architecture.
@@ -257,6 +293,7 @@ docs/encrypted-notes.md
 | sub_tasks | Sub-task dalam todo |
 | todo_label | Pivot many-to-many todo dan label |
 | milestones | Milestone/project dengan progress dari todo |
+| daily_progresses | Catatan pekerjaan yang sudah dilakukan per tanggal, dengan relasi opsional ke todo |
 | encrypted_notes | Ciphertext notes dengan UUID, archive, pin, soft delete, dan sync metadata |
 | jobs | Laravel queue jobs |
 | failed_jobs | Jobs yang gagal dieksekusi |

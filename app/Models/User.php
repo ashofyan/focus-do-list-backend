@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -29,7 +28,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
+        'password' => 'hashed',
     ];
 
     // -------------------------------------------------------------------------
@@ -56,9 +55,13 @@ class User extends Authenticatable
         return $this->hasMany(Milestone::class);
     }
 
+    public function dailyProgresses(): HasMany
+    {
+        return $this->hasMany(DailyProgress::class);
+    }
+
     public function encryptedNotes(): HasMany
     {
         return $this->hasMany(EncryptedNote::class);
     }
-
 }
